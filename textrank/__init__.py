@@ -13,6 +13,7 @@ import itertools
 import networkx as nx
 import nltk
 import os
+import googletrans
 
 
 def setup_environment():
@@ -67,6 +68,16 @@ def build_graph(nodes):
         gr.add_edge(firstString, secondString, weight=levDistance)
 
     return gr
+
+# translate text to english using google translate python library
+def translate_to_english(text):
+    """Return a translated version of the source text.
+
+    :param text: A string.
+    """
+    from googletrans import Translator
+    translator = Translator()
+    return translator.translate(text, dest='en').text
 
 
 def extract_key_phrases(text):
@@ -127,19 +138,56 @@ def extract_key_phrases(text):
 
     return modified_key_phrases
 
+# check if text is english using google translate python library
+def is_english(text):
+    """Return a boolean indicating whether the text is in English.
 
-def extract_sentences(text, summary_length=100, clean_sentences=False, language='english'):
+    :param text: A string.
+    """
+    from googletrans import Translator
+    translator = Translator()
+    return translator.detect(text).lang == 'en'
+
+# return text language
+def get_language(text):
+    """Return the language of the text.
+
+    :param text: A string.
+    """
+    from googletrans import Translator
+    translator = Translator()
+    return translator.detect(text).lang
+
+def translate(text, lang):
+    """Return a translated version of the source text.
+
+    :param text: A string.
+    :param lang: A string representing the target language.
+    """
+    from googletrans import Translator
+    translator = Translator()
+    return translator.translate(text, dest=lang).text
+
+def extract_sentences(text, summary_length, clean_sentences=False):
     """Return a paragraph formatted summary of the source text.
 
     :param text: A string.
     """
-    sent_detector = nltk.data.load('tokenizers/punkt/'+language+'.pickle')
+
+    lang = get_language(text)
+    
+    # check if text is already in english
+    if not is_english(text):
+        text = translate_to_english(text)
+
+
+    sent_detector = nltk.data.load('tokenizers/punkt/english.pickle')
     sentence_tokens = sent_detector.tokenize(text.strip())
     graph = build_graph(sentence_tokens)
 
     calculated_page_rank = nx.pagerank(graph, weight='weight')
 
-    # most important sentences in ascending order of importance
+    # # most important sentences in ascending order of importance
     sentences = sorted(calculated_page_rank, key=calculated_page_rank.get,
                        reverse=True)
 
@@ -154,7 +202,7 @@ def extract_sentences(text, summary_length=100, clean_sentences=False, language=
     else:
         summary = ' '.join(summary_words)
 
-    return summary
+    return translate(summary, lang)
 
 
 def write_files(summary, key_phrases, filename):
