@@ -18,6 +18,7 @@ def initialize():
 @click.argument('summary_length', type=int)
 def extract_summary(filename, summary_length):
     """Print summary text to stdout."""
+    summary_length = check_length(summary_length)
     with open(filename) as f:
         summary = textrank.extract_sentences(f.read(), summary_length)
         print(summary)
@@ -30,3 +31,8 @@ def extract_phrases(filename):
     with open(filename) as f:
         phrases = textrank.extract_key_phrases(f.read())
         print(phrases)
+        
+def check_length(value):
+    if value < 50:
+        raise click.BadParameter('Summary length must be at least 50 words.')
+    return value
