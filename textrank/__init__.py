@@ -168,7 +168,7 @@ def translate(text, lang):
     translator = Translator()
     return translator.translate(text, dest=lang).text
 
-def extract_sentences(text, summary_length, clean_sentences=False):
+def extract_sentences(text, summary_length, clean_sentences=True):
     """Return a paragraph formatted summary of the source text.
 
     :param text: A string.
